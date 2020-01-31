@@ -1,2 +1,3 @@
 # ignore go.sum
 /go.sum
+/scrape-connpass-go
