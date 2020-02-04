@@ -1,32 +1,22 @@
-// Package scrapeconnpass provides a set of Cloud Functions.
-package scrapeconnpass
+package main
 
 import (
 	"context"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 
 	"google.golang.org/api/option"
 
-	"net/http"
-
 	"cloud.google.com/go/firestore"
-	firebase "firebase.google.com/go"
 )
 
 var projectID = "attendance-functions"
 
-// ToDo Cloud Function で動作するように修正
+func main() {
 
-// scrapeConnpass is an HTTP Cloud Function with a request parameter.
-func scrapeConnpass(response http.ResponseWriter, request *http.Request) {
 	ctx := context.Background()
-
-	auth(ctx, request)
-
 	sa := option.WithCredentialsFile("/home/tflare/attendance-functions-b1c2438d620c.json")
 	client, err := firestore.NewClient(ctx, projectID, sa)
 	if err != nil {
@@ -35,38 +25,6 @@ func scrapeConnpass(response http.ResponseWriter, request *http.Request) {
 	defer client.Close()
 
 	scrape(ctx, client)
-}
-
-func auth(ctx context.Context, request *http.Request) {
-
-	idToken := getIDToken(request)
-
-	conf := &firebase.Config{
-		ServiceAccountID: "",
-		ProjectID:        "",
-	}
-
-	app, err := firebase.NewApp(ctx, conf)
-	if err != nil {
-		log.Fatalf("error initializing app: %v\n", err)
-	}
-	authClient, err := app.Auth(ctx)
-	if err != nil {
-		log.Fatalf("error getting Auth client: %v\n", err)
-	}
-
-	_, err = authClient.VerifyIDToken(ctx, idToken)
-	if err != nil {
-		log.Fatalf("error verifying ID token: %v\n", err)
-	}
-}
-
-func getIDToken(request *http.Request) string {
-
-	// ToDo 動作確認
-	reqToken := request.Header.Get("Authorization")
-	idToken := strings.Split(reqToken, "Bearer ")
-	return idToken[1]
 }
 
 func scrape(ctx context.Context, client *firestore.Client) {
